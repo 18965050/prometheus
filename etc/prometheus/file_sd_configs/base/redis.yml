@@ -1,0 +1,30 @@
+- targets: ['localhost:16479']
+  labels:
+    env: 'dev'
+    exporter_type: 'redis'
+    instance: '192.168.56.89:16379'
+- targets: ['localhost:16579']
+  labels:
+    env: 'fat'
+    exporter_type: 'redis'
+    instance: '192.168.56.90:16379'
+- targets: ['localhost:16679']
+  labels:
+    env: 'dev'
+    exporter_type: 'redis'
+    instance: '192.168.56.124:16379'
+- targets: ['localhost:16779']
+  labels:
+    env: 'fat'
+    exporter_type: 'redis'
+    instance: '192.168.56.134:16379'
+- targets: ['localhost:6479']
+  labels:
+    env: 'dev'
+    exporter_type: 'redis'
+    instance: '192.168.56.89:6379'
+- targets: ['localhost:6579']
+  labels:
+    env: 'fat'
+    exporter_type: 'redis'
+    instance: '192.168.56.90:6379'

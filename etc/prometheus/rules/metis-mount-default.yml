@@ -1,0 +1,47 @@
+groups:
+  - name: metisMountDefaultAlert
+    rules:
+      - alert: mickeyAccessAlert
+        expr: probe_success{instance=~"http://linglongta.vemic.com.*/login"} < 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "env:[{{$labels.env}}]. mickey认证平台不能访问"
+          description: "env:[{{$labels.env}}].mickey认证平台不能访问"
+
+      - alert: smsAccessAlert
+        expr: probe_success{instance=~".*/sms/services/MessageTransferWebService"} < 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "env:[{{$labels.env}}].短信平台不能访问"
+          description: "env:[{{$labels.env}}].短信平台不能访问"
+
+      - alert: mailAccessAlert
+        expr: avg(metis_mail_access) by(env,application) < 0.5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "env:[{{$labels.env}}].邮件平台不能访问"
+          description: "env:[{{$labels.env}}].邮件平台不能访问"
+
+      - alert: domainAccessAlert
+        expr: avg(metis_domain_access) by(env,application) < 0.5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "env:[{{$labels.env}}].LDAP域名认证平台不能访问"
+          description: "env:[{{$labels.env}}].LDAP域名认证平台不能访问"
+
+      - alert: ffsAccessAlert
+        expr: avg(metis_ffs_access) by(env,application) < 0.5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "env:[{{$labels.env}}].FFS平台不能访问"
+          description: "env:[{{$labels.env}}].FFS平台不能访问"

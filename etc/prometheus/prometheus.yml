@@ -1,0 +1,82 @@
+# my global config
+global:
+  scrape_interval:     5s # Set the scrape interval to every 15 seconds. Default is every 1 minute.
+  evaluation_interval: 5s # Evaluate rules every 15 seconds. The default is every 1 minute.
+  # scrape_timeout is set to the global default (10s).
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - 'am.xyz.d'
+
+# Load rules once and periodically evaluate them according to the global 'evaluation_interval'.
+rule_files:
+  - "/etc/prometheus/rules/common.yml"
+  - "/etc/prometheus/rules/common-jvm.yml"
+  - "/etc/prometheus/rules/redis.yml"
+  - "/etc/prometheus/rules/metis-mount-default.yml"
+
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  # metrics_path defaults to '/metrics'
+  # scheme defaults to 'http'.
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          env: 'dev'
+          exporter_type: 'prometheus'
+
+  - job_name: 'redis'
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    file_sd_configs:
+      - files: ['/etc/prometheus/file_sd_configs/base/redis.yml']
+        refresh_interval: 5s
+
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['localhost:9105']
+        labels:
+          instance: "dev-normal-56.75"
+          env: 'dev'
+          exporter_type: 'mysql'
+
+  - job_name: 'node_system'
+    static_configs:
+    file_sd_configs:
+      - files: ['/etc/prometheus/file_sd_configs/node_system/*.yml']
+        refresh_interval: 5s
+
+  - job_name: 'blackbox'
+    #scrape_interval: 1m
+    #scrape_timeout: 10s
+    metrics_path: /probe
+    params:
+      module: [http_2xx]    # 对应blackbox export中的module
+    static_configs:
+      - targets:
+          - http://linglongta.vemic.com/login    #mickey认证
+          - http://192.168.51.101:8080/sms/services/MessageTransferWebService   #sms platform
+        labels:
+          env: 'dev'
+          exporter_type: 'blackbox'
+          application: 'metis-mount-default'
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: localhost:9115
+
+  - job_name: 'java_apps'
+    scrape_interval: 5s
+    metrics_path: '/actuator/prometheus'
+    file_sd_configs:
+      - files: ['/etc/prometheus/file_sd_configs/java_apps/*.yml']
+        refresh_interval: 5s

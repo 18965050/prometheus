@@ -1,0 +1,52 @@
+groups:
+  - name: 'DatabaseConnection'
+    rules:
+      - alert: '数据库 active 连接数量达到连接池配置的最大值'
+        expr: jdbc_connections_active >= jdbc_connections_max   # metricName expr
+        for: 30s
+        labels:
+          serverity: critical
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 数据库 active 连接数量达到连接池配置的最大值"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 数据库 active 连接数量达到连接池配置的最大值，持续30s 当前值：{{$value}}"
+
+      - alert: '数据库 active 连接数量异常'
+        expr: jdbc_connections_active > 4 and jdbc_connections_active > max_over_time(jdbc_connections_active[3h] offset 1d) * 2 and jdbc_connections_active > max_over_time(jdbc_connections_active[1h] offset 1h) * 1.5 and jdbc_connections_active offset 25h > 0
+        for: 1m
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 数据库 active 连接数量异常 ！"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 数据库 active 连接数量大于4且大于前一天同时段三小时最大值的两倍，且大于一小时前的一小时内最大值的1.5倍"
+
+      - alert: '数据库连接 discard'
+        expr: jdbc_druid_discard > 0
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 数据库连接出现 discard 情况"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 数据库连接出现 discard 情况，数量 {{$value}} "
+
+      - alert: '数据库连接 removeAbandoned'
+        expr: jdbc_druid_removeAbandoned > 0
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 数据库连接出现 removeAbandoned 情况"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 数据库连接出现 removeAbandoned 情况，数量 {{$value}} "
+
+      - alert: '数据库连接 connectError'
+        expr: jdbc_druid_connectError > 0
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 数据库连接出现 connectError 情况"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 数据库连接出现 connectError 情况，数量 {{$value}} "
+
+      - alert: '数据库连接 recycleError'
+        expr: jdbc_druid_recycleError > 0
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 数据库连接出现 recycleError 情况"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 数据库连接出现 recycleError 情况，数量 {{$value}} "

@@ -1,0 +1,82 @@
+groups:
+  - name: 'jvm-info'
+    rules:
+      - record: jvm_memory_heap_used_bytes_sum
+        expr: sum(jvm_memory_used_bytes{area="heap"}) by (application, instance, env, job, exporter_type)
+        labels:
+          by_rule: true
+      - record: jvm_memory_nonheap_used_bytes_sum
+        expr: sum(jvm_memory_used_bytes{area="nonheap"}) by (application, instance, env, job, exporter_type)
+        labels:
+          by_rule: true
+
+      - alert: '应用宕机'
+        expr: up{application!=""} != 1
+        for: 6m
+        labels:
+          serverity: critical
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 宕机！"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 宕机 6 分钟以上！ job={{ $labels.job }}"
+
+      - alert: 'JVM Heap Memory Usage'
+        expr: jvm_memory_heap_used_bytes_sum / on (application, instance, env, exporter_type, job) sum(jvm_memory_max_bytes{area="heap"}) by (application, instance, env, exporter_type, job) * 100 > 90 or on (application, instance, env, exporter_type, job) (jvm_memory_heap_used_bytes_sum / on (application, instance, env, exporter_type, job) sum(jvm_memory_max_bytes{area="heap"}) by (application, instance, env, exporter_type, job) * 100 > 50 and on (application, instance, env, exporter_type, job) jvm_memory_heap_used_bytes_sum > max_over_time(jvm_memory_heap_used_bytes_sum[3h] offset 1d) * 1.3 and on (application, instance, env, exporter_type, job) jvm_memory_heap_used_bytes_sum > max_over_time(jvm_memory_heap_used_bytes_sum[1h] offset 1h) * 1.2 and on (application, instance, env, exporter_type, job) jvm_memory_heap_used_bytes_sum offset 25h > 0)
+        for: 1m
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}]堆内存异常"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}]堆内存使用超过 90%或大于前一天同时段三小时内最大值的130%且大于一小时前的一小时时段内最大值的120%。（当前值：{{printf \"%.2f\" $value}}%）"
+
+      - alert: 'JVM Metaspace Usage'
+        expr: jvm_memory_used_bytes{id="Metaspace"} / jvm_memory_max_bytes{id="Metaspace"} * 100 > 60 and jvm_memory_used_bytes{id="Metaspace"} > max_over_time(jvm_memory_used_bytes{id="Metaspace"}[3h] offset 1d) * 1.2 and jvm_memory_used_bytes{id="Metaspace"} offset 25h > 0
+        for: 1m
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}]堆 Metaspace 异常"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}]Metaspace 超过 60%，且大于前一天同一时段三小时内最大值的 120%（当前值：{{printf \"%.2f\" $value}}%）"
+
+      - alert: 'JVM GC Pause'
+        expr: rate(jvm_gc_pause_seconds_sum[15s]) / rate(jvm_gc_pause_seconds_count[15s]) > 5 and rate(jvm_gc_pause_seconds_sum[15s]) / rate(jvm_gc_pause_seconds_count[15s]) < 9999
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] GC 暂停时间超过5s"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}]GC 暂停超过 5s（当前值：{{printf \"%.2f\" $value}}s）； Action：{{$labels.action}}；Cause：{{$labels.action}}"
+
+      - alert: 'JVM Live Threads'
+        for: 60s
+        expr: jvm_threads_live_threads > 100 and jvm_threads_live_threads > max_over_time(jvm_threads_live_threads[3h] offset 1d) * 1.5 and jvm_threads_live_threads > max_over_time(jvm_threads_live_threads[1h] offset 1h) * 1.2 and jvm_threads_live_threads offset 25h > 0
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] Live Threads 数量异常"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] Live Threads 连续一分钟大于前一天同时间段三小时内最大值的1.5倍且大于一小时前的一小时时间段内最大值的1.2倍（当前值：{{$value}}）"
+
+      - alert: 'Http 平均请求时间'
+        expr: sum(rate(tomcat_servlet_request_seconds_sum[1m])) by (application, instance, env, exporter_type, job) /sum(rate(tomcat_servlet_request_seconds_count[1m])) by (application, instance, env, exporter_type, job) > 2
+        for: 2m
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 平均请求时间超过阈值"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] 连续两分钟平均请求时间超过 2s（当前值：{{printf \"%.2f\" $value}}s）"
+
+      - alert: 'Tomcat Busy Thread'
+        expr: tomcat_threads_busy_threads > 50 or (tomcat_threads_busy_threads > 10 and tomcat_threads_busy_threads > (max_over_time(tomcat_threads_busy_threads[3h] offset 1d) * 2))
+        for: 60s
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] Tomcat busy thread 异常"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] Tomcat busy thread 异常： 连续 60s 超出 50 或者大于前一天同时间段三小时内最大值的两倍。（当前值：{{$value}}）"
+
+      - alert: 'jvm process cpu'
+        expr: process_cpu_usage * 100 > 50
+        for: 1m
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] jvm 进程 cpu 使用异常"
+          description: "env:[{{$labels.env}}] 应用[{{$labels.application}}]的实例[{{$labels.instance}}] jvm 进程 cpu 使用异常： 连续 1m 超出 50%。（当前值：{{printf \"%.2f\" $value}}%）"

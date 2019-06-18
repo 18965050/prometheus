@@ -1,0 +1,111 @@
+# dms
+- targets: ['api.dms.xyz.cn:8866']
+  labels:
+    exporter_type: 'java'
+    application: 'ck-goku'
+    env: 'fat'
+# ck-medusa
+- targets: ['192.168.56.50:9010']
+  labels:
+    exporter_type: 'java'
+    application: 'ck-medusa'
+    env: 'dev'
+- targets: ['192.168.56.43:9010']
+  labels:
+    exporter_type: 'java'
+    application: 'ck-medusa'
+    env: 'fat'
+# io-admin-auth
+- targets: ['192.168.56.50:23333']
+  labels:
+    exporter_type: 'java'
+    application: 'io-admin-auth'
+    env: 'dev'
+- targets: ['192.168.56.43:23333']
+  labels:
+    exporter_type: 'java'
+    application: 'io-admin-auth'
+    env: 'fat'
+# metis
+# 'metis-app-mount'
+- targets: ['192.168.56.76:9000']
+  labels:
+    exporter_type: 'java'
+    application: 'metis-app-mount'
+    env: 'dev'
+- targets: ['192.168.56.62:9000']
+  labels:
+    exporter_type: 'java'
+    application: 'metis-app-mount'
+    env: 'fat'
+# 'metis-app-vdisk'
+- targets: ['192.168.56.76:9001']
+  labels:
+    exporter_type: 'java'
+    application: 'metis-app-vdisk'
+    env: 'dev'
+- targets: ['192.168.56.62:9001']
+  labels:
+    exporter_type: 'java'
+    application: 'metis-app-vdisk'
+    env: 'fat'
+# 'metis-mount-default'
+- targets: ['192.168.56.76:23333']
+  labels:
+    exporter_type: 'java'
+    application: 'metis-mount-default'
+    env: 'dev'
+- targets: ['192.168.56.62:23333']
+  labels:
+    exporter_type: 'java'
+    application: 'metis-mount-default'
+    env: 'fat'
+# ck-puck
+- targets: ['192.168.53.14:9050']
+  labels:
+    exporter_type: 'java'
+    application: 'ck-puck'
+    env: 'dev'
+- targets: ['192.168.53.17:9050']
+  labels:
+    exporter_type: 'java'
+    application: 'ck-puck'
+    env: 'fat'
+- targets: ['192.168.56.145:9050']
+  labels:
+    exporter_type: 'java'
+    application: 'ck-puck'
+    env: 'fat2'
+# io-all
+# io-koni-compose
+- targets: ['192.168.53.14:17052']
+  labels:
+    exporter_type: 'java'
+    application: 'io-koni-compose'
+    env: 'dev'
+- targets: ['192.168.53.17:17052']
+  labels:
+    exporter_type: 'java'
+    application: 'io-koni-compose'
+    env: 'fat'
+- targets: ['192.168.56.145:17052']
+  labels:
+    exporter_type: 'java'
+    application: 'io-koni-compose'
+    env: 'fat2'
+# io-koni-basic
+- targets: ['192.168.53.14:17051']
+  labels:
+    exporter_type: 'java'
+    application: 'io-koni-basic'
+    env: 'dev'
+- targets: ['192.168.53.17:17051']
+  labels:
+    exporter_type: 'java'
+    application: 'io-koni-basic'
+    env: 'fat'
+- targets: ['192.168.56.145:17051']
+  labels:
+    exporter_type: 'java'
+    application: 'io-koni-basic'
+    env: 'fat2'

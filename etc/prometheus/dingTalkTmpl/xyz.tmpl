@@ -1,0 +1,35 @@
+{{ define "__subject" }}
+[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.SortedPairs.Values | join " " }} {{ if gt (len .CommonLabels) (len .GroupLabels) }}({{ with .CommonLabels.Remove .GroupLabels.Names }}{{ .Values | join " " }}{{ end }}){{ end }}
+{{ end }}
+
+{{ define "__alertmanagerURL" -}}
+{{ .ExternalURL }}/#/alerts?receiver={{ .Receiver }}
+{{- end }}
+
+{{ define "__text_alert_list" }}
+{{ range . }}
+-----------------------
+### {{ .Annotations.summary }}
+告警触发时间： {{ .StartsAt.Format "2006-01-02 15:04:05" }}
+{{ if eq .Status "resolved" }}
+告警消除时间： {{ .EndsAt.Format "2006-01-02 15:04:05" }}
+{{ end }}
+*Labels*
+{{ range .Labels.SortedPairs }}
+> - {{ .Name }}: {{ .Value | markdown | html }}
+{{ end }}
+*Annotations*
+{{ range .Annotations.SortedPairs }}
+> - {{ .Name }}: {{ .Value | markdown | html }}
+{{ end }}
+
+{{ end }}
+{{ end }}
+
+{{ define "ding.link.title" }}{{ template "__subject" . }}{{ end }}
+
+{{ define "ding.link.content" }}
+## \[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}\] **[{{ index .GroupLabels "alertname" }}]({{ template "__alertmanagerURL" . }})**
+{{ template "__text_alert_list" .Alerts.Firing}}
+{{ template "__text_alert_list" .Alerts.Resolved}}
+{{ end }}

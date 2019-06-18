@@ -1,0 +1,35 @@
+groups:
+  - name: 'common'
+    rules:
+      - alert: '基础设施宕机'
+        expr: up{application=""} != 1
+        for: 1m
+        labels:
+          serverity: critical
+        annotations:
+          summary: "env:[{{$labels.env}}] 实例[{{$labels.instance}}] 宕机！"
+          description: "env:[{{$labels.env}}] 实例[{{$labels.instance}}] 宕机 1 分钟以上！ job={{ $labels.job }}"
+      - alert: 'CPU 使用率过高'
+        expr: 100 - (sum(rate(node_cpu_seconds_total{mode="idle"}[5s])) by (env, instance, job) * 100 / count(node_cpu_seconds_total{mode="idle"}) by (env, instance, job) or sum(irate(node_cpu_seconds_total{mode="idle"}[5m])) by (env, instance, job) * 100 / count(node_cpu_seconds_total{mode="idle"}) by (env, instance, job)) > 60
+        for: 1m
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 实例[{{$labels.instance}}] CPU使用率过高 ！"
+          description: "env:[{{$labels.env}}] 实例[{{$labels.instance}}] CPU使用率高于60%！当前使用率{{printf \"%.2f\" $value }}%"
+      - alert: '内存可用率过低'
+        expr: (node_memory_MemAvailable_bytes or (node_memory_MemFree_bytes + node_memory_Buffers_bytes + node_memory_Cached_bytes)) / node_memory_MemTotal_bytes * 100 < 1
+        for: 1m
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 实例[{{$labels.instance}}] 内存可用率过低！"
+          description: "env:[{{$labels.env}}] 实例[{{$labels.instance}}] 内存可用率小于 10%！当前可用率 {{printf \"%.2f\" $value }}%"
+      - alert: '磁盘可用率过低'
+        expr: node_filesystem_avail_bytes{fstype!~"rootfs|selinuxfs|autofs|rpc_pipefs|tmpfs|udev|none|devpts|sysfs|debugfs|fuse.*", mountpoint="/"} / node_filesystem_size_bytes{fstype!~"rootfs|selinuxfs|autofs|rpc_pipefs|tmpfs|udev|none|devpts|sysfs|debugfs|fuse.*", mountpoint="/"} * 100 < 10
+        for: 1m
+        labels:
+          serverity: warn
+        annotations:
+          summary: "env:[{{$labels.env}}] 实例[{{$labels.instance}}] 可用磁盘过低！"
+          description: "env:[{{$labels.env}}] 实例[{{$labels.instance}}] 可用磁盘小于 10%！当前可用率 {{printf \"%.2f\" $value }}%"

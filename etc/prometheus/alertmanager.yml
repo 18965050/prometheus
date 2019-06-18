@@ -1,0 +1,83 @@
+#########################################
+##参考: https://yunlzheng.gitbook.io/prometheus-book/parti-prometheus-ji-chu/alert/alert-manager-route
+#########################################
+
+global:
+  # 解决超时时间，从告警触发后多久仍没有被更新
+  resolve_timeout: 5m
+
+  # smtp 不可用，参考 https://github.com/prometheus/alertmanager/issues/1358
+  # Go SMTP package doesn't allow authentication without encryption
+
+
+  # The default HTTP client configuration
+  # [ http_config: <http_config> ]
+
+# Files from which custom notification template definitions are read.
+# The last component may use a wildcard matcher, e.g. 'templates/*.tmpl'.
+#templates:
+#  [ - <filepath> ... ]
+
+# The root node of the routing tree.
+route:
+  receiver: 'xxx-test-receiver'
+  # 按照哪些标签分组
+  group_by: ['alertname', 'application', 'cluster', 'service']
+
+  # alert 是否继续匹配之后的兄弟节点 Whether an alert should continue matching subsequent sibling nodes.
+  #[ continue: <boolean> | default = false ]
+
+  # 匹配该节点的匹配集合
+  #match:
+  #  [ <labelname>: <labelvalue>, ... ]
+
+  # 正则形式的匹配集合
+  #match_re:
+  #  [ <labelname>: <regex>, ... ]
+
+  # 对一个 group alerts 而言，从一开始，等待多久之后才发送告警。期间用于抑制或聚合更多的同 group 告警
+  group_wait: 10s
+  # 最初的告警发送过之后，同一个组等多久再发送新的的告警
+  group_interval: 5m
+  # 对于已发送成功的告警信息，多长时间后再次发送 （应该是还没标记为 resolved）
+  repeat_interval: 4h
+
+  routes:
+    - receiver: 'xyz-dream-team-prod'
+      match_re:
+        application: '.*goku.*'
+        env: 'fat'
+    - receiver: 'xyz-biz-backend-team'
+      match_re:
+        application: '(.*xyz.*|.*union.*|.*openapi.*|.*cm.*|.*lion.*|.*apollo.*|.*mobile.*|.*cars.*|.*.alch.*)'
+    - receiver: 'xyz-dream-team'
+      match_re:
+        application: '(.*medusa.*|.*puck.*|.*admin.auth.*|.*metis.*|.*io.product.*|.*io.koni.*|.*io.compose.*|.*file.*)'
+
+# A list of notification receivers.
+receivers:
+  - name: 'xxx-test-receiver'
+    webhook_configs:
+      - url: 'http://localhost:8060/dingtalk/khanTest/send'
+        send_resolved: true
+  # khan's 本地 go-ku 测试链接
+  - name: 'khan-local-test-receiver'
+    webhook_configs:
+      - url: 'http://localhost:8060/dingtalk/noodle1/send'
+        send_resolved: true
+  - name: 'lcg-receiver'
+    webhook_configs:
+      - url: 'http://localhost:8060/dingtalk/lcgwebhook/send'
+        send_resolved: true
+  - name: 'xyz-biz-backend-team'
+    webhook_configs:
+      - url: 'http://localhost:8060/dingtalk/biz/send'
+        send_resolved: true
+  - name: 'xyz-dream-team'
+    webhook_configs:
+      - url: 'http://localhost:8060/dingtalk/dream/send'
+        send_resolved: true
+  - name: 'xyz-dream-team-prod'
+    webhook_configs:
+      - url: 'http://localhost:8060/dingtalk/dreamProd/send'
+        send_resolved: true
